@@ -1,0 +1,19 @@
+{
+  "name": "@creadigme/github-backup",
+  "version": "0.1.0",
+  "main": "build/cli.js",
+  "engines": {
+    "node": ">=18"
+  },
+  "repository": "https://github.com/creadigme/github-backup.git",
+  "author": "CREADIGME SAS",
+  "license": "MIT",
+  "scripts": {
+    "build": "rimraf ./build && node ./node_modules/typescript/bin/tsc"
+  },
+  "devDependencies": {
+    "@types/node": "^18.11.9",
+    "rimraf": "^3.0.2",
+    "typescript": "^4.9.3"
+  }
+}

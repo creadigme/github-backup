@@ -1,0 +1,27 @@
+{
+  "compileOnSave": true,
+  "compilerOptions": {
+    "emitDecoratorMetadata": true,
+    "experimentalDecorators": true,
+    "moduleResolution": "node",
+    "module": "commonjs",
+    "skipLibCheck": true,
+    "target": "ES2020",
+    "esModuleInterop": true,
+    "resolveJsonModule": true,
+    "strict": true,
+    "sourceMap": true,
+    "newLine": "LF",
+    "outDir": "./build"
+  },
+  "exclude": [
+    "./node_modules",
+    "./samples"
+  ],
+  "include": [
+    "test",
+    "src" ],
+  "atom": {
+    "rewriteTsconfig": false
+  }
+}

@@ -1,0 +1,17 @@
+ARG ALPINE_VERSION=3.17
+FROM alpine:${ALPINE_VERSION} AS build
+
+WORKDIR /data
+
+COPY /scripts /data/scripts
+
+FROM alpine:${ALPINE_VERSION}
+LABEL org.opencontainers.image.source https://github.com/creadigme/github-backup
+
+WORKDIR /data
+
+COPY --from=build /data /data
+
+RUN chmod +x /data/scripts/github-backup.sh
+
+ENTRYPOINT ["/data/scripts/github-backup.sh"]
