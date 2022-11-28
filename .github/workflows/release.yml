@@ -12,6 +12,7 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    if: github.repository == 'creadigme/github-backup'
     permissions:
       contents: read
       packages: write
@@ -55,7 +56,7 @@ jobs:
         context: ./
         file: Dockerfile
         push: false
-        tags: node-${{ steps.metaNode.outputs.tags }}
+        tags: ${{ steps.metaNode.outputs.tags }}
         labels: ${{ steps.metaNode.outputs.labels }}
         build-args: |
           NODE_ALPINE_VERSION=${{ env.NODE_ALPINE_VERSION }}
@@ -72,7 +73,7 @@ jobs:
         context: ./
         file: Dockerfile-sh
         push: false
-        tags: sh-${{ steps.metaSh.outputs.tags }}
+        tags: ${{ steps.metaSh.outputs.tags }}
         labels: ${{ steps.metaSh.outputs.labels }}
         build-args: |
           ALPINE_VERSION=${{ env.ALPINE_VERSION }}
