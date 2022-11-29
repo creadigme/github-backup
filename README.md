@@ -25,9 +25,8 @@ docker run --rm -v '/mnt/x/backups':/mnt/backups --env GITHUB_BACKUP_PATH=/mnt/b
 
 > Note: on DSM Synology - this can be download from the **SynoCommunity**.
 
-- Now login to Github and go to [https://github.com/settings/tokens]( https://github.com/settings/tokens) and create a personal access token with the following scopes:
-    - repo (repo itself including all subs) - Full control of private repositories
-    - admin:org read:org - Read org and team membership
+- Now login to Github and go to [Fine-grained personal access tokens](https://github.com/settings/tokens?type=beta) and create a fine-grained token with the following repositories permissions:
+    - Read access to code and metadata
 
 - Add this token as environment variable `GITHUB_BACKUP_TOKEN` (`GITHUB_BACKUP_TOKEN="[PUT YOUR TOKEN HERE BETWEEN THE QUOTES]"`).
 - Add the target github name as environment variable `GITHUB_BACKUP_USER` (`GITHUB_BACKUP_USER="[PUT THE TARGET USERNAME]"`).
