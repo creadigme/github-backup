@@ -14,6 +14,8 @@ if [ -z "$GITHUB_BACKUP_PATH" ]; then
     exit -1
 fi
 
+echo "Backup directory: ${GITHUB_BACKUP_PATH}."
+
 # you shouldn't need to change anything below here - unless you have over 100 repos: in which case, see the bottom.
 TOTALCOUNTER=0
 PAGE=1
@@ -60,11 +62,19 @@ fetch_fromUrl() {
 
         # Create a bare clone of the repository
         if [ -d "$REPOPATH" ]; then
-            echo "Updating repo (--mirror): ${GITURL} to ${REPOPATH}"
+            echo "Updating repo (--mirror): ${REPONAME}..."
+        
+            # We set the credentials again
+            (cd ${REPOPATH} && ${GIT} remote add origin --mirror=fetch ${GITURL})
+            # Updating...
             (cd ${REPOPATH} && ${GIT} remote update)
         else
-            echo "Cloning repo (--mirror): ${GITURL} to ${REPOPATH}"
+            echo "Cloning repo (--mirror): ${REPONAME}..."
             ${GIT} clone --mirror ${GITURL} ${REPOPATH}
+        fi
+        # We don't keep the origin/token
+        if [ -d "$REPOPATH" ]; then
+            (cd ${REPOPATH} && ${GIT} remote remove origin)
         fi
 
         # Pull in the repository's Git Large File Storage objects.
@@ -79,11 +89,18 @@ fetch_fromUrl() {
             WIKIURL="https://oauth2:${GITHUB_BACKUP_TOKEN}@github.com/${REPONAME}.wiki.git"
 
             if [ -d "$WIKIPATH" ]; then
-                echo "Updating repo (--mirror): ${WIKIURL} to ${WIKIPATH}"
+                echo "Updating wiki (--mirror): ${REPONAME}..."
+                # We set the credentials again
+                (cd ${WIKIPATH} && ${GIT} remote add origin --mirror=fetch ${WIKIURL})
+                # Updating...
                 (cd ${WIKIPATH} && ${GIT} remote update)
             else
-                echo "Cloning wiki (--mirror): ${WIKIURL} to ${WIKIPATH}"
+                echo "Cloning wiki (--mirror): ${REPONAME}..."
                 ${GIT} clone --mirror ${WIKIURL} ${WIKIPATH}
+            fi
+            # We don't keep the origin/token
+            if [ -d "$WIKIPATH" ]; then
+                (cd ${WIKIPATH} && ${GIT} remote remove origin)
             fi
         fi
     done
