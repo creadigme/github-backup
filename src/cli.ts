@@ -6,6 +6,10 @@ import * as fs from "node:fs/promises";
 import * as path from "node:path";
 import { execSync } from "node:child_process";
 
+async function pathExists(fileOrDir: string): Promise<boolean> {
+  return await fs.access(fileOrDir, fs.constants.R_OK).then(() => true). catch(() => false)
+}
+
 async function getRepositories({
   url,
   token,
@@ -30,11 +34,15 @@ async function getRepositories({
 }
 
 async function mirrorCloneRepository({
+  repo,
   git,
   gitUrl,
   repoPath,
   canFail = false,
 }: {
+  repo: {
+    full_name: string
+  },
   git: string;
   gitUrl: string;
   repoPath: string;
@@ -42,8 +50,13 @@ async function mirrorCloneRepository({
 }) {
 
   try {
-    if (await fs.access(path.join(repoPath, 'HEAD'), fs.constants.R_OK).then(() => true). catch(() => false)) {
-      console.log(`Updating repo (--mirror): ${gitUrl} to ${repoPath}...`);
+    const gitLastPart = gitUrl.slice(gitUrl.lastIndexOf('/'));
+    if (await pathExists(path.join(repoPath, 'HEAD'))) {
+      console.log(`Updating repo: ${repo.full_name} (${gitLastPart})...`);
+      // We set the credentials again
+      execSync(`${git} remote add origin --mirror=fetch ${gitUrl}`, {
+        cwd: repoPath,
+      });
 
       // Update
       execSync(`${git} remote update`, {
@@ -51,21 +64,29 @@ async function mirrorCloneRepository({
       });
     } else {
       // Create a bare clone of the repository
-      console.log(`Cloning repo (--mirror): ${gitUrl} to ${repoPath}...`);
+      console.log(`Cloning repo: ${repo.full_name} (${gitLastPart})...`);
       execSync(`${git} clone --mirror ${gitUrl} ${repoPath}`);
     }
 
-    // Pull in the repository's Git Large File Storage objects.
-    execSync(`${git} lfs fetch --all`, {
-      cwd: repoPath,
-    });
-  } catch (error: any) {
-    if (error?.stderr) {
-      error.message += '\n' + error.stderr.toString();
-    }
+    if (await pathExists(path.join(repoPath, 'HEAD'))) {
+      // Pull in the repository's Git Large File Storage objects.
+      execSync(`${git} lfs fetch --all`, {
+        cwd: repoPath,
+      });
 
+      // We don't keep the credentials
+      execSync(`${git} remote remove origin`, {
+        cwd: repoPath,
+      });
+    }
+  } catch (error: any) {
+    // if (error?.stderr) {
+    //   error.message += '\n' + error.stderr.toString();
+    // }
+
+    error.message = (error.message as string).replace(/https:\/\/oauth2:(.*)\@github\.com/g, '***');
     if (canFail) {
-      console.error(error);
+      console.warn(error.message);
     } else {
       throw error;
     }
@@ -83,6 +104,8 @@ async function main() {
   if (!backupPath) {
     throw new Error(`You must specify GITHUB_BACKUP_PATH env.`);
   }
+
+  console.log(`Backup directory: ${path.resolve(backupPath)}`);
 
   if (!token && !backupUser) {
     throw new Error(`You must specify GITHUB_BACKUP_USER env.`);
@@ -113,6 +136,7 @@ async function main() {
       });
 
       await mirrorCloneRepository({
+        repo,
         git,
         gitUrl: token ? `https://oauth2:${token}@github.com/${repo.full_name}.git` : `https://github.com/${repo.full_name}.git`,
         repoPath: path.join(repoPath, "code"),
@@ -120,6 +144,7 @@ async function main() {
 
       if (repo.has_wiki) {
         await mirrorCloneRepository({
+          repo,
           git,
           gitUrl: token ? `https://oauth2:${token}@github.com/${repo.full_name}.wiki.git` : `https://github.com/${repo.full_name}.wiki.git`,
           repoPath: path.join(repoPath, "wiki"),
