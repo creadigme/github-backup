@@ -1,0 +1,5 @@
+# v0.1.0 - 2022/11/28
+
+- We no longer use `git clone` and `git pull`, but `git clone --mirror` and `git remote update`.
+- New alternative of `sh` script with `Node.js >=18` version, same use but compatible with `Windows` without `WSL`.
+- Docker images for `sh` and the `node` versions.
