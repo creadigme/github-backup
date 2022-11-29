@@ -60,6 +60,9 @@ fetch_fromUrl() {
         mkdir "${GITHUB_BACKUP_PATH}/${REPONAME}" -p
         REPOPATH="${GITHUB_BACKUP_PATH}/${REPONAME}/code"
 
+        # prevent "detected dubious ownership in repository"
+        ${GIT} config --global --add safe.directory ${REPOPATH}
+
         # Create a bare clone of the repository
         if [ -d "$REPOPATH" ]; then
             echo "Updating repo (--mirror): ${REPONAME}..."
