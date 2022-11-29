@@ -55,7 +55,7 @@ jobs:
       with:
         context: ./
         file: Dockerfile
-        push: false
+        push: true
         tags: ${{ steps.metaNode.outputs.tags }}
         labels: ${{ steps.metaNode.outputs.labels }}
         build-args: |
@@ -72,7 +72,7 @@ jobs:
       with:
         context: ./
         file: Dockerfile-sh
-        push: false
+        push: true
         tags: ${{ steps.metaSh.outputs.tags }}
         labels: ${{ steps.metaSh.outputs.labels }}
         build-args: |
