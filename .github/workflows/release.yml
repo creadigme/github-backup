@@ -31,7 +31,7 @@ jobs:
     - name: Install dependencies
       env:
         CI: true
-      run: yarn run dependencies
+      run: yarn
     - name: Build
       run: yarn build
 
