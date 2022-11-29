@@ -7,6 +7,18 @@ This script offers two methods to save your Github repositories:
 - An advanced method with Node.js *(Linux/MacOS/Windows)*.
 - A simple `sh` script designed to run on the Synology DS range of file storage servers to backup all repositories (and wikis) for a user from Github *(Linux/MacOS/WSL)*.
 
+## With Docker
+
+```bash
+# node.js version
+docker run --rm -v '/mnt/x/backups':/mnt/backups --env GITHUB_BACKUP_PATH=/mnt/backups --env GITHUB_BACKUP_USER=[company] --env GITHUB_BACKUP_TOKEN=[YOUR TOKEN] ghcr.io/creadigme/github-backup:0.1.0
+```
+
+```bash
+# bin/sh version
+docker run --rm -v '/mnt/x/backups':/mnt/backups --env GITHUB_BACKUP_PATH=/mnt/backups --env GITHUB_BACKUP_USER=[company] --env GITHUB_BACKUP_TOKEN=[YOUR TOKEN] ghcr.io/creadigme/github-backup-sh:0.1.0
+```
+
 ## Prerequist
 
 - Ensure you have `git` installed on the Server/Synology.

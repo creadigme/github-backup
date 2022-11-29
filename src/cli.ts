@@ -50,6 +50,9 @@ async function mirrorCloneRepository({
 }) {
 
   try {
+    // prevent "detected dubious ownership in repository"
+    execSync(`${git} config --global --add safe.directory ${repoPath}`);
+
     const gitLastPart = gitUrl.slice(gitUrl.lastIndexOf('/'));
     if (await pathExists(path.join(repoPath, 'HEAD'))) {
       console.log(`Updating repo: ${repo.full_name} (${gitLastPart})...`);
@@ -73,22 +76,20 @@ async function mirrorCloneRepository({
       execSync(`${git} lfs fetch --all`, {
         cwd: repoPath,
       });
-
-      // We don't keep the credentials
-      execSync(`${git} remote remove origin`, {
-        cwd: repoPath,
-      });
     }
   } catch (error: any) {
-    // if (error?.stderr) {
-    //   error.message += '\n' + error.stderr.toString();
-    // }
-
     error.message = (error.message as string).replace(/https:\/\/oauth2:(.*)\@github\.com/g, '***');
     if (canFail) {
       console.warn(error.message);
     } else {
       throw error;
+    }
+  } finally {
+    if (await pathExists(path.join(repoPath, 'config'))) {
+      // We don't keep the credentials
+      execSync(`${git} remote remove origin`, {
+        cwd: repoPath,
+      });
     }
   }
 }
@@ -106,6 +107,11 @@ async function main() {
   }
 
   console.log(`Backup directory: ${path.resolve(backupPath)}`);
+  if (!await pathExists(backupPath)) {
+    await fs.mkdir(backupPath, {
+      recursive: true,
+    });
+  }
 
   if (!token && !backupUser) {
     throw new Error(`You must specify GITHUB_BACKUP_USER env.`);
@@ -171,6 +177,13 @@ main()
     process.exit(0);
   })
   .catch((error) => {
+    if (error?.stderr) {
+      const strerr = error.stderr.toString();
+      if (error.message.indexOf(strerr) === -1) {
+        error.message += '\n' + strerr;
+      }
+    }
+
     console.error(error);
     process.exit(-1);
   });

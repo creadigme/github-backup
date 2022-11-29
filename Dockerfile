@@ -12,6 +12,10 @@ ENV NODE_ENV=production
 
 WORKDIR /data
 
+RUN apk fix && \
+    apk --no-cache --update add git git-lfs gpg less openssh patch && \
+    git lfs install
+
 COPY --from=build /data /data
 
 ENTRYPOINT ["node", "/data/build/cli.js"]
