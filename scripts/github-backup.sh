@@ -11,7 +11,7 @@
 # where should the files be saved
 if [ -z "$GITHUB_BACKUP_PATH" ]; then
     echo "You must specify GITHUB_BACKUP_PATH env."
-    exit -1
+    exit 1
 fi
 
 echo "Backup directory: ${GITHUB_BACKUP_PATH}."
@@ -28,7 +28,7 @@ if [ -z "$GITHUB_BACKUP_TOKEN" ]
     then
         if [ -z "$GITHUB_BACKUP_USER" ]; then
             echo "You must specify GITHUB_BACKUP_USER env."
-            exit -1
+            exit 2
         fi
         API_URL_BASE="https://api.github.com/users/${GITHUB_BACKUP_USER}"
     else
@@ -41,9 +41,9 @@ fetch_fromUrl() {
 
     if [ -z "$GITHUB_BACKUP_TOKEN" ]
         then
-            REPOS=`curl -s "${API_URL}" | jq -r 'values[] | "\(.full_name),\(.private),\(.git_url),\(.has_wiki)"'`
+            REPOS=`curl -s "${API_URL}" | jq -r 'values[] | "\(.full_name),\(.private),\(.git_url),\(.has_wiki),\(.owner.login),\(.name)"'`
         else
-            REPOS=`curl -H "Authorization: token ${GITHUB_BACKUP_TOKEN}" -s "${API_URL}" | jq -r 'values[] | "\(.full_name),\(.private),\(.git_url),\(.has_wiki)"'`
+            REPOS=`curl -H "Authorization: token ${GITHUB_BACKUP_TOKEN}" -s "${API_URL}" | jq -r 'values[] | "\(.full_name),\(.private),\(.git_url),\(.has_wiki),\(.owner.login),\(.name)"'`
     fi
 
     RES_COUNT=0
@@ -56,6 +56,8 @@ fetch_fromUrl() {
         PRIVATEFLAG=`echo ${REPO} | cut -d ',' -f2`
         ORIGINALGITURL=`echo ${REPO} | cut -d ',' -f3`
         HASWIKI=`echo ${REPO} | cut -d ',' -f4`
+        ORG_NAME=`echo ${REPO} | cut -d ',' -f5`
+        REPO_NAME=`echo ${REPO} | cut -d ',' -f6`
         GITURL="https://oauth2:${GITHUB_BACKUP_TOKEN}@github.com/${REPONAME}.git"
         mkdir "${GITHUB_BACKUP_PATH}/${REPONAME}" -p
         REPOPATH="${GITHUB_BACKUP_PATH}/${REPONAME}/code"
@@ -87,6 +89,11 @@ fetch_fromUrl() {
             `touch ${GITHUB_BACKUP_PATH}/${REPONAME}/private`
         fi
 
+        # Extra step
+        if ! [ -z "$EXTRA_REPO_STEP" ]; then
+            GITEA_URL=$GITEA_URL GITEA_USER=$GITEA_USER GITEA_API_TOKEN=$GITEA_API_TOKEN GITEA_VISIBILITY=$GITEA_VISIBILITY REPO_PATH=$REPOPATH ORG_NAME=$ORG_NAME REPO_NAME=$REPO_NAME $EXTRA_REPO_STEP
+        fi
+
         if [ "true"===${HASWIKI} ]; then
             WIKIPATH="${GITHUB_BACKUP_PATH}/${REPONAME}/wiki"
             WIKIURL="https://oauth2:${GITHUB_BACKUP_TOKEN}@github.com/${REPONAME}.wiki.git"
@@ -104,6 +111,11 @@ fetch_fromUrl() {
             # We don't keep the origin/token
             if [ -d "$WIKIPATH" ]; then
                 (cd ${WIKIPATH} && ${GIT} remote remove origin)
+
+                # Extra step
+                if ! [ -z "$EXTRA_REPO_STEP" ]; then
+                    GITEA_URL=$GITEA_URL GITEA_USER=$GITEA_USER GITEA_API_TOKEN=$GITEA_API_TOKEN GITEA_VISIBILITY=$GITEA_VISIBILITY REPO_PATH=$WIKIPATH ORG_NAME=$ORG_NAME REPO_NAME=$REPO_NAME-wiki $EXTRA_REPO_STEP
+                fi
             fi
         fi
     done
